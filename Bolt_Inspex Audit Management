@@ -1,0 +1,34 @@
+import { createClient } from '@supabase/supabase-js';
+
+// Setup Supabase client
+const supabaseUrl = 'https://vsgmgsykagqofhxuokkk.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzZ21nc3lrYWdxb2ZoeHVva2trIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzIzODksImV4cCI6MjA2ODE0ODM4OX0.l9UaqpUKg4cwmXeV7Ql2AXU5c_AhFvo6ATn6eauD75Q';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Upload file to storage bucket
+export async function uploadAuditFile(fileUri, fileName) {
+  const response = await fetch(fileUri);
+  const fileBlob = await response.blob();
+
+  const { data, error } = await supabase.storage
+    .from('Bolt_Inspex Audit Management') // your bucket name
+    .upload(`inspections/${fileName}`, fileBlob, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (error) {
+    console.error('Upload failed:', error.message);
+    return null;
+  }
+  return data;
+}
+
+// Download file
+export async function getAuditFileUrl(path) {
+  const { data } = supabase.storage
+    .from('audit-files')
+    .getPublicUrl(path);
+
+  return data?.publicUrl || null;
+}
